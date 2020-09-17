@@ -1,26 +1,37 @@
 import click
 import matplotlib.pyplot as plt
-from skimage import data, filters, color, io
-from scipy.ndimage import correlate
+from skimage import filters, color, io
 import numpy as np
 import time
 import glob
 import re
+import multiprocessing as mp
 
 def compute_scoring_matrix(image):
     # computer the energy image using gradient magnitude
     matrix = filters.sobel(color.rgb2gray(image))
 
-    r, c = matrix.shape
-    for i in range(1, r):
-        for j in range(c):
-            if (j == 0):
+    # helper function
+    def compute_row(i, idx1, idx2):
+        for j in range(idx1, idx2):
+            if j == 0:
                 matrix[i, j] += min(matrix[i-1, j], matrix[i-1, j+1])
             elif (j == c-1):
                 matrix[i, j] += min(matrix[i-1, j-1], matrix[i-1, j])
             else:
                 matrix[i, j] += min(matrix[i-1, j-1], matrix[i-1, j], matrix[i-1, j+1])
+
     
+    r, c = matrix.shape
+    for i in range(1, r):
+        for j in range(c):
+            if j == 0:
+                matrix[i, j] += min(matrix[i-1, j], matrix[i-1, j+1])
+            elif j == c-1:
+                matrix[i, j] += min(matrix[i-1, j-1], matrix[i-1, j])
+            else:
+                matrix[i, j] += min(matrix[i-1, j-1], matrix[i-1, j], matrix[i-1, j+1])
+                
     return matrix
 
 def minimum_seam(matrix):
@@ -80,6 +91,6 @@ def cli(input, output, width, height):
     idx = 0
     if results:
         # Get the largest index
-        idx = int(re.search("\d+", results[-1]).group())
+        idx = int(re.search(r'\d+', results[-1]).group())
     
     io.imsave(output.format(idx+1), image)
