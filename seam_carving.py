@@ -11,17 +11,6 @@ def compute_scoring_matrix(image):
     # computer the energy image using gradient magnitude
     matrix = filters.sobel(color.rgb2gray(image))
 
-    # helper function
-    def compute_row(i, idx1, idx2):
-        for j in range(idx1, idx2):
-            if j == 0:
-                matrix[i, j] += min(matrix[i-1, j], matrix[i-1, j+1])
-            elif (j == c-1):
-                matrix[i, j] += min(matrix[i-1, j-1], matrix[i-1, j])
-            else:
-                matrix[i, j] += min(matrix[i-1, j-1], matrix[i-1, j], matrix[i-1, j+1])
-
-    
     r, c = matrix.shape
     for i in range(1, r):
         for j in range(c):
@@ -31,7 +20,7 @@ def compute_scoring_matrix(image):
                 matrix[i, j] += min(matrix[i-1, j-1], matrix[i-1, j])
             else:
                 matrix[i, j] += min(matrix[i-1, j-1], matrix[i-1, j], matrix[i-1, j+1])
-                
+
     return matrix
 
 def minimum_seam(matrix):
