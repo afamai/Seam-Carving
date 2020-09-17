@@ -4,6 +4,8 @@ from skimage import data, filters, color, io
 from scipy.ndimage import correlate
 import numpy as np
 import time
+import glob
+import re
 
 def compute_scoring_matrix(image):
     # computer the energy image using gradient magnitude
@@ -51,10 +53,33 @@ def remove_seams(image, amount):
     return img
 
 @click.command()
-def cli():
-    image = io.imread("example01.jpg")
-    start = time.time()
-    im = remove_seams(image, 30)
-    print("Time: " + str(time.time() - start))
-    plt.imshow(im)
-    plt.show()
+@click.option("-i", "--input", type=click.File('rb'), required=True, help="The input file.")
+@click.option("-o", "--output", type=click.Path(), default="result{:04}.jpg", help="The output file.", show_default=True)
+@click.option("-w", "--width", type=int, help="The resulting width to resize the image to.")
+@click.option("-h", "--height", type=int, help="The resulting height to resize the image to.")
+def cli(input, output, width, height):
+    image = io.imread(input)
+    h, w, _ = image.shape
+
+    if width:
+        dx = width - w
+        if dx < 0:
+            image = remove_seams(image, abs(dx))
+
+    
+
+    if height:
+        image = np.rot90(image)
+        dy = height - h
+        if dy < 0:
+            image = remove_seams(image, abs(dy))
+        image = np.rot90(image, k=-1)
+
+    # Find all result images in current directory
+    results = glob.glob("result*.jpg") 
+    idx = 0
+    if results:
+        # Get the largest index
+        idx = int(re.search("\d+", results[-1]).group())
+    
+    io.imsave(output.format(idx+1), image)
