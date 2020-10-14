@@ -6,6 +6,10 @@ import time
 DTYPE = np.int_
 ctypedef np.int_t DTYPE_t
 
+'''
+This function computes the cumulative minimum energy map. Due to the expensive cost to calculating the map
+cython is used here to improve speed.
+'''
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def compute_scoring_matrix(int[:, :, :] image):
